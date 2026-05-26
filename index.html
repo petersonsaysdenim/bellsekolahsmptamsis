@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🔔 Aplikasi Bel Sekolah (Repeat Custom)</title>
+    <title>Aplikasi Bel Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
@@ -17,7 +17,7 @@
                         warning: { DEFAULT: '#f39c12', hover: '#d68910' },
                     },
                     animation: {
-                        pulse: 'pulse 0.8s ease-in-out infinite alternate',
+                        'pulse-ring': 'pulse 0.8s ease-in-out infinite alternate',
                     },
                     keyframes: {
                         pulse: {
@@ -30,49 +30,35 @@
         }
     </script>
     <style>
-        /* Custom styles yang tidak bisa di-cover Tailwind */
-        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap');
-        body { font-family: 'Segoe UI', system-ui, sans-serif; }
-        .clock-font { font-family: 'Courier New', monospace; }
+        /* Use system fonts instead of Google Fonts to avoid CORS issues */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+        }
+        .clock-font { font-family: 'Courier New', Courier, monospace; }
         .min-touch { min-height: 44px; min-width: 44px; }
-        /* Hide scrollbar for table wrapper but allow scroll */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        /* Table card view for mobile */
+        
+        /* Mobile card view for table */
         @media (max-width: 640px) {
             thead { display: none; }
             tbody tr { 
-                display: block; 
-                margin-bottom: 0.75rem; 
-                border: 1px solid #e5e7eb; 
-                border-radius: 0.75rem; 
-                padding: 0.75rem; 
-                background: white;
+                display: block; margin-bottom: 0.75rem; border: 1px solid #e5e7eb; 
+                border-radius: 0.75rem; padding: 0.75rem; background: white;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             }
             tbody td { 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: center;
-                padding: 0.5rem 0;
-                border-bottom: 1px dashed #f3f4f6;
-                font-size: 0.95rem;
+                display: flex; justify-content: space-between; align-items: center;
+                padding: 0.5rem 0; border-bottom: 1px dashed #f3f4f6; font-size: 0.95rem;
             }
             tbody td:last-child { border-bottom: none; padding-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
             tbody td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: #6b7280;
-                font-size: 0.85rem;
-                margin-right: 0.75rem;
+                content: attr(data-label); font-weight: 600; color: #6b7280;
+                font-size: 0.85rem; margin-right: 0.75rem;
             }
             tbody td:first-child { 
-                font-size: 1.25rem; 
-                font-weight: 700; 
-                color: #3498db;
-                border-bottom: 1px solid #e5e7eb;
-                padding-bottom: 0.75rem;
-                margin-bottom: 0.5rem;
+                font-size: 1.25rem; font-weight: 700; color: #3498db;
+                border-bottom: 1px solid #e5e7eb; padding-bottom: 0.75rem; margin-bottom: 0.5rem;
             }
             tbody td:first-child::before { display: none; }
         }
@@ -82,21 +68,21 @@
 
     <!-- Audio Overlay -->
     <div id="audioOverlay" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-2xl p-6 text-center shadow-2xl max-w-xs w-full mx-4 animate-fade-in">
+        <div class="bg-white rounded-2xl p-6 text-center shadow-2xl max-w-xs w-full mx-4">
             <h3 class="text-primary text-lg font-semibold mb-2">🔊 Aktifkan Suara Bel</h3>
-            <p class="text-gray-600 text-sm mb-4 leading-relaxed">Browser memblokir suara otomatis. Klik tombol di bawah untuk mengizinkan bel berbunyi.</p>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">Klik tombol di bawah untuk mengizinkan bel berbunyi.</p>
             <button id="enableAudio" class="w-full bg-primary hover:bg-primary-hover text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 min-touch active:scale-95">
                 ✅ Izinkan & Mulai
             </button>
+            <p id="audioError" class="text-danger text-xs mt-3 hidden"></p>
         </div>
     </div>
 
     <!-- Main Container -->
     <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 relative">
         
-        <!-- Header -->
-        <h1 class="text-center text-gray-800 mb-1 text-xl sm:text-2xl font-bold">🔔 Aplikasi Bel Sekolah <span class="text-sm font-normal text-gray-500">(Repeat Custom)</span></h1>
-        <div id="audioStatus" class="text-center text-xs sm:text-sm text-gray-500 mb-3">⏳ Menunggu interaksi audio...</div>
+        <h1 class="text-center text-gray-800 mb-1 text-xl sm:text-2xl font-bold">🔔 Bel Sekolah <span class="text-sm font-normal text-gray-500">(Audio FIXED)</span></h1>
+        <div id="audioStatus" class="text-center text-xs sm:text-sm text-gray-500 mb-3">⏳ Menunggu aktivasi audio...</div>
         
         <!-- Clock -->
         <div id="clock" class="text-center text-4xl sm:text-5xl lg:text-6xl font-bold text-primary clock-font mb-4 sm:mb-6 tracking-wider transition-all duration-300 py-2">
@@ -114,7 +100,7 @@
         </div>
 
         <!-- Form Input -->
-        <div class="input-group grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 mb-5 items-end" id="formContainer">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 mb-5 items-end" id="formContainer">
             <div class="sm:col-span-2 lg:col-span-1">
                 <label class="block text-xs font-medium text-gray-600 mb-1 sm:hidden">Waktu</label>
                 <input type="time" id="bellTime" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary transition-colors min-touch">
@@ -135,11 +121,11 @@
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1 sm:hidden">Durasi</label>
-                <input type="number" id="bellDuration" placeholder="Detik" min="0.5" max="10" step="0.5" value="3.5" title="Durasi per bunyi (0.5 - 10 detik)" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary transition-colors min-touch">
+                <input type="number" id="bellDuration" placeholder="Detik" min="0.5" max="10" step="0.5" value="3.5" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary transition-colors min-touch">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1 sm:hidden">Ulang</label>
-                <input type="number" id="bellRepeat" min="1" max="10" step="1" value="1" title="Jumlah pengulangan (1 - 10)" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary transition-colors min-touch">
+                <input type="number" id="bellRepeat" min="1" max="10" step="1" value="1" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary transition-colors min-touch">
             </div>
             <button id="addBell" class="lg:col-span-6 bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 min-touch flex items-center justify-center gap-2 active:scale-95">
                 ➕ Tambah Jadwal
@@ -149,50 +135,147 @@
             </button>
         </div>
 
-        <!-- Table Wrapper -->
+        <!-- Table -->
         <div class="overflow-x-auto scrollbar-hide rounded-xl border border-gray-200">
             <table class="w-full min-w-[600px]">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Waktu</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Keterangan</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Suara</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Durasi</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ulang</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Waktu</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Keterangan</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Suara</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Durasi</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Ulang</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="scheduleList" class="divide-y divide-gray-100">
-                    <!-- Dynamic content -->
-                </tbody>
+                <tbody id="scheduleList" class="divide-y divide-gray-100"></tbody>
             </table>
         </div>
     </div>
 
     <script>
     $(document).ready(function() {
-        // 1. KONFIGURASI SUARA & JEDA
+        // ========== KONFIGURASI AUDIO ==========
         const PAUSE_BETWEEN_REPEATS = 1.0;
-        const SOUND_DEFAULTS = {
-            bell_klasik: { dur: 3.5, oscs: [{f:520, g:1.0}, {f:1040, g:0.5}, {f:1560, g:0.35}, {f:2080, g:0.2}] },
-            pelajaran: { dur: 0.4, oscs: [{f:880, g:0.4, start:0}, {f:880, g:0.4, start:0.4}] },
-            istirahat: { dur: 1.8, oscs: [{f:659, g:0.3, start:0}, {f:784, g:0.3, start:0.25}, {f:880, g:0.3, start:0.5}] },
-            pulang: { dur: 5.0, oscs: [{f:220, g:0.5}, {f:330, g:0.25}, {f:440, g:0.1}] },
-            alarm: { dur: 1.6, isPulse: true }
-        };
-        const SOUND_LABELS = {
-            bell_klasik: '🔔 Klasik', pelajaran: '📖 Ding',
-            istirahat: '☕ Chime', pulang: '🏠 Gong', alarm: '🚨 Alarm'
+        
+        const SOUND_CONFIG = {
+            bell_klasik: {
+                name: '🔔 Klasik',
+                play: (ctx, time, duration) => {
+                    const frequencies = [523.25, 659.25, 783.99, 1046.50];
+                    frequencies.forEach((freq, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        
+                        const start = time + (i * 0.05);
+                        const attack = 0.02;
+                        const release = Math.max(0.3, duration * 0.3);
+                        
+                        gain.gain.setValueAtTime(0, start);
+                        gain.gain.linearRampToValueAtTime(0.4, start + attack);
+                        gain.gain.exponentialRampToValueAtTime(0.001, start + duration - release);
+                        
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(start);
+                        osc.stop(start + duration + 0.1);
+                    });
+                }
+            },
+            pelajaran: {
+                name: '📖 Ding',
+                play: (ctx, time, duration) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = 880;
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(0.5, time + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + Math.min(0.5, duration));
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(time);
+                    osc.stop(time + Math.min(0.5, duration) + 0.05);
+                }
+            },
+            istirahat: {
+                name: '☕ Chime',
+                play: (ctx, time, duration) => {
+                    [659.25, 783.99, 880].forEach((freq, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        const start = time + (i * 0.15);
+                        gain.gain.setValueAtTime(0, start);
+                        gain.gain.linearRampToValueAtTime(0.35, start + 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.001, start + Math.min(0.8, duration));
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(start);
+                        osc.stop(start + Math.min(0.8, duration) + 0.05);
+                    });
+                }
+            },
+            pulang: {
+                name: '🏠 Gong',
+                play: (ctx, time, duration) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = 220;
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(0.6, time + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(time);
+                    osc.stop(time + duration + 0.2);
+                    
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.value = 330;
+                    gain2.gain.setValueAtTime(0, time + 0.1);
+                    gain2.gain.linearRampToValueAtTime(0.25, time + 0.15);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, time + duration);
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start(time + 0.1);
+                    osc2.stop(time + duration + 0.2);
+                }
+            },
+            alarm: {
+                name: '🚨 Alarm',
+                play: (ctx, time, duration) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.value = 800;
+                    gain.gain.setValueAtTime(0, time);
+                    gain.gain.linearRampToValueAtTime(0.2, time + 0.01);
+                    for(let t = time; t < time + duration; t += 0.2) {
+                        gain.gain.setValueAtTime(0.2, t);
+                        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+                        gain.gain.setValueAtTime(0.2, t + 0.15);
+                    }
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(time);
+                    osc.stop(time + duration + 0.1);
+                }
+            }
         };
 
-        // 2. STATE & DATA
+        // ========== STATE ==========
         let schedule = JSON.parse(localStorage.getItem('schoolBellSchedule')) || [];
         schedule = schedule.map(s => ({
-            time: s.time, 
-            label: s.label, 
+            time: s.time, label: s.label, 
             sound: s.sound || 'bell_klasik',
-            duration: s.duration || SOUND_DEFAULTS[s.sound]?.dur || 2.0,
-            repeat: s.repeat || 1
+            duration: s.duration || 3.5, repeat: s.repeat || 1
         }));
         
         let lastRingedTime = '';
@@ -205,66 +288,92 @@
                 { time: '07:00', label: 'Masuk Kelas', sound: 'bell_klasik', duration: 3.5, repeat: 1 },
                 { time: '09:30', label: 'Istirahat 1', sound: 'istirahat', duration: 1.8, repeat: 2 },
                 { time: '10:00', label: 'Masuk Kembali', sound: 'pelajaran', duration: 0.4, repeat: 1 },
-                { time: '12:00', label: 'Istirahat 2 / Pulang', sound: 'pulang', duration: 5.0, repeat: 1 }
+                { time: '12:00', label: 'Pulang', sound: 'pulang', duration: 5.0, repeat: 1 }
             ];
             saveSchedule();
         }
         renderSchedule();
 
-        // 3. AUDIO ENGINE
-        function playSoundType(type, duration) {
-            if (!audioEnabled || !audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const now = audioCtx.currentTime;
-            const dur = Math.max(0.5, Math.min(10, duration || 2.0));
-            const config = SOUND_DEFAULTS[type] || SOUND_DEFAULTS.bell_klasik;
-
-            const createOsc = (freq, wave, gainVal, startOffset, durMult = 1) => {
-                const actualDur = Math.max(0.05, dur * durMult);
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = wave; osc.frequency.value = freq;
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                gain.gain.setValueAtTime(0, now + startOffset);
-                gain.gain.linearRampToValueAtTime(gainVal, now + startOffset + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.0001, now + startOffset + actualDur);
-                osc.start(now + startOffset); osc.stop(now + startOffset + actualDur + 0.1);
-            };
-
-            if (config.isPulse) {
-                const count = Math.max(2, Math.round(dur / 0.25));
-                const gap = dur / count;
-                for(let i=0; i<count; i++) createOsc(800, 'square', 0.15, i * gap, gap / dur);
-            } else {
-                config.oscs.forEach(o => createOsc(o.f, 'sine', o.g, o.start || 0, o.durMult || 1));
+        // ========== AUDIO ENGINE ==========
+        function initAudio() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) throw new Error('Web Audio API tidak didukung');
+                
+                audioCtx = new AudioContext();
+                
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(console.error);
+                }
+                
+                const silent = audioCtx.createBuffer(1, 1, 22050);
+                const source = audioCtx.createBufferSource();
+                source.buffer = silent;
+                source.connect(audioCtx.destination);
+                source.start(0);
+                
+                audioEnabled = true;
+                return true;
+            } catch(e) {
+                console.error('Audio init error:', e);
+                $('#audioError').text('❌ ' + e.message).removeClass('hidden');
+                return false;
             }
         }
 
-        // 4. TRIGGER BEL
+        function playSound(type, duration) {
+            if (!audioEnabled || !audioCtx) {
+                console.warn('Audio not enabled');
+                return false;
+            }
+            
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(console.error);
+            }
+            
+            const config = SOUND_CONFIG[type] || SOUND_CONFIG.bell_klasik;
+            const now = audioCtx.currentTime;
+            const dur = Math.max(0.5, Math.min(10, duration || 3.5));
+            
+            try {
+                config.play(audioCtx, now, dur);
+                return true;
+            } catch(e) {
+                console.error('Play error:', e);
+                return false;
+            }
+        }
+
+        // ========== TRIGGER BEL ==========
         function triggerBell(label, time, soundType, duration, repeat) {
             repeat = Math.max(1, Math.min(10, repeat));
             const totalSeconds = repeat * duration + (repeat > 1 ? (repeat - 1) * PAUSE_BETWEEN_REPEATS : 0);
             
-            $('#clock').addClass('animate-pulse text-danger');
-            setTimeout(() => $('#clock').removeClass('animate-pulse text-danger'), totalSeconds * 1000 + 500);
+            $('#clock').addClass('animate-pulse-ring text-danger');
+            setTimeout(() => $('#clock').removeClass('animate-pulse-ring text-danger'), totalSeconds * 1000 + 500);
 
             if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('🔔 Bel Sekolah', { body: `${label} (${time}) | ${repeat}x ${duration}s`, icon: '🔔' });
+                new Notification('🔔 ' + label, { body: `${time} • ${repeat}x ${duration}s` });
             }
 
-            let current = 0;
-            function ringNext() {
-                if (current >= repeat) return;
-                playSoundType(soundType, duration);
-                current++;
-                if (current < repeat) {
-                    setTimeout(ringNext, (duration + PAUSE_BETWEEN_REPEATS) * 1000);
+            if ('vibrate' in navigator && repeat > 1) {
+                navigator.vibrate([100, 100, 100]);
+            }
+
+            let count = 0;
+            function playNext() {
+                if (count >= repeat) return;
+                const played = playSound(soundType, duration);
+                if (!played) console.warn('Failed to play sound');
+                count++;
+                if (count < repeat) {
+                    setTimeout(playNext, (duration + PAUSE_BETWEEN_REPEATS) * 1000);
                 }
             }
-            ringNext();
+            playNext();
         }
 
-        // 5. JAM & CHECK
+        // ========== CLOCK & SCHEDULE CHECK ==========
         setInterval(function() {
             const now = new Date();
             const h = String(now.getHours()).padStart(2, '0');
@@ -272,16 +381,17 @@
             $('#clock').text(`${h}:${m}:${String(now.getSeconds()).padStart(2, '0')}`);
             
             const currentHM = `${h}:${m}`;
-            if (currentHM !== lastRingedTime) {
+            if (currentHM !== lastRingedTime && audioEnabled) {
                 const match = schedule.find(s => s.time === currentHM);
                 if (match) {
+                    console.log(`🔔 Trigger: ${match.label} at ${currentHM}`);
                     triggerBell(match.label, currentHM, match.sound, match.duration, match.repeat);
                     lastRingedTime = currentHM;
                 }
             }
         }, 1000);
 
-        // 6. FORM HANDLING
+        // ========== FORM HANDLING ==========
         function resetForm() {
             $('#bellTime, #bellLabel').val('');
             $('#bellSoundType').val('bell_klasik');
@@ -297,7 +407,7 @@
             const time = $('#bellTime').val();
             const label = $('#bellLabel').val().trim();
             const sound = $('#bellSoundType').val();
-            let duration = parseFloat($('#bellDuration').val()) || 2.0;
+            let duration = parseFloat($('#bellDuration').val()) || 3.5;
             let repeat = parseInt($('#bellRepeat').val()) || 1;
             duration = Math.max(0.5, Math.min(10, duration));
             repeat = Math.max(1, Math.min(10, repeat));
@@ -321,19 +431,15 @@
             const t = $(this).data('time');
             const item = schedule.find(s => s.time === t);
             if (!item) return;
-            
             $('#bellTime').val(item.time);
             $('#bellLabel').val(item.label);
             $('#bellSoundType').val(item.sound);
             $('#bellDuration').val(item.duration);
             $('#bellRepeat').val(item.repeat);
             editTime = item.time;
-            
             $('#addBell').text('💾 Update').removeClass('bg-primary').addClass('bg-success');
             $('#cancelEdit').removeClass('hidden');
             $('#formContainer').addClass('editing');
-            $('#bellTime').focus();
-            
             if (window.innerWidth < 640) {
                 $('html, body').animate({ scrollTop: $('#formContainer').offset().top - 20 }, 300);
             }
@@ -351,34 +457,28 @@
         $('#cancelEdit').click(resetForm);
         $('#clearAll').click(function() {
             if (confirm('Yakin hapus SEMUA jadwal?')) { 
-                schedule = []; 
-                saveSchedule(); 
-                renderSchedule(); 
-                resetForm(); 
+                schedule = []; saveSchedule(); renderSchedule(); resetForm(); 
             }
         });
 
         $('#testBell').click(function() {
-            const dur = parseFloat($('#bellDuration').val()) || 2.0;
+            const dur = parseFloat($('#bellDuration').val()) || 3.5;
             const rep = parseInt($('#bellRepeat').val()) || 1;
             triggerBell('🧪 Test', '00:00', $('#bellSoundType').val(), dur, rep);
         });
 
+        // ========== AUDIO ENABLE ==========
         $('#enableAudio').click(function() {
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                audioEnabled = true;
+            const success = initAudio();
+            if (success) {
                 $('#audioOverlay').addClass('opacity-0 pointer-events-none');
-                $('#audioStatus').html('✅ <span class="text-success">Audio aktif! Bel akan berbunyi otomatis.</span>');
+                $('#audioStatus').html('✅ <span class="text-success">Audio aktif! 🎵</span>');
                 $('#testBell').prop('disabled', false);
-                if ('vibrate' in navigator) navigator.vibrate(100);
-            } catch(e) { 
-                alert('⚠️ Browser tidak mendukung Web Audio API.'); 
+                setTimeout(() => playSound('pelajaran', 0.3), 200);
             }
         });
 
-        // 7. RENDER TABLE
+        // ========== RENDER TABLE ==========
         function renderSchedule() {
             const tbody = $('#scheduleList');
             tbody.empty();
@@ -387,11 +487,12 @@
                 return;
             }
             schedule.forEach(item => {
+                const soundName = SOUND_CONFIG[item.sound]?.name || item.sound;
                 tbody.append(`
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td data-label="Waktu" class="px-4 py-3 font-semibold text-primary">${item.time}</td>
                         <td data-label="Keterangan" class="px-4 py-3">${item.label}</td>
-                        <td data-label="Suara" class="px-4 py-3"><span class="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">${SOUND_LABELS[item.sound] || item.sound}</span></td>
+                        <td data-label="Suara" class="px-4 py-3"><span class="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">${soundName}</span></td>
                         <td data-label="Durasi" class="px-4 py-3"><span class="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">${item.duration}s</span></td>
                         <td data-label="Ulang" class="px-4 py-3"><span class="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">${item.repeat}x</span></td>
                         <td data-label="Aksi" class="px-4 py-3">
@@ -413,12 +514,10 @@
             Notification.requestPermission();
         }
         
-        // Prevent zoom on double-tap mobile
         let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            const now = Date.now();
-            if (now - lastTouchEnd <= 300) event.preventDefault();
-            lastTouchEnd = now;
+        document.addEventListener('touchend', function(e) {
+            if (Date.now() - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = Date.now();
         }, false);
     });
     </script>
