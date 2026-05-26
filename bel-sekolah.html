@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔔 Aplikasi Bel Sekolah (Repeat Custom)</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        :root {
+            --primary: #3498db; --primary-hover: #2980b9;
+            --danger: #e74c3c; --danger-hover: #c0392b;
+            --success: #2ecc71; --success-hover: #27ae60;
+            --bg: #f5f7fa; --card: #ffffff; --text: #2c3e50; --border: #e0e0e0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 920px; margin: 0 auto; background: var(--card); padding: 2rem; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); position: relative; }
+        h1 { text-align: center; color: var(--text); margin-bottom: 0.5rem; font-size: 1.8rem; }
+        .status-bar { text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 1rem; }
+        .clock { text-align: center; font-size: 3.4rem; font-weight: 700; color: var(--primary); font-family: 'Courier New', monospace; margin-bottom: 1.5rem; letter-spacing: 2px; transition: all 0.3s; }
+        .clock.ringing { color: var(--danger); animation: pulse 0.8s ease-in-out infinite alternate; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: flex-end; }
+        input, select { padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; transition: border 0.2s; }
+        input { flex: 1; min-width: 80px; }
+        input:focus, select:focus { border-color: var(--primary); }
+        select { background: #fff; cursor: pointer; min-width: 130px; }
+        .editing input, .editing select { border-color: var(--success); background: #f0fdf4; }
+        button { padding: 12px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
+        button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-danger { background: var(--danger); padding: 8px 12px; font-size: 0.85rem; }
+        .btn-danger:hover { background: var(--danger-hover); }
+        .btn-edit { background: #f39c12; padding: 8px 12px; font-size: 0.85rem; margin-right: 6px; }
+        .btn-edit:hover { background: #d68910; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: #f8f9fa; color: #666; font-weight: 600; }
+        .sound-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; background: #eef2f7; color: #495057; }
+        .dur-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; background: #fff3cd; color: #856404; }
+        .repeat-badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 500; background: #d1ecf1; color: #0c5460; }
+        .empty-state { text-align: center; color: #999; padding: 2rem 0; font-style: italic; }
+        .controls { display: flex; gap: 10px; margin-bottom: 1rem; justify-content: flex-end; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .audio-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); transition: opacity 0.3s; }
+        .audio-overlay.hidden { opacity: 0; pointer-events: none; }
+        .overlay-box { background: white; padding: 2rem; border-radius: 12px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .overlay-box h3 { margin-bottom: 10px; color: var(--primary); }
+        .overlay-box p { margin-bottom: 15px; color: #555; }
+        @keyframes pulse { 0% { transform: scale(1); text-shadow: 0 0 10px rgba(231,76,60,0.3); } 100% { transform: scale(1.04); text-shadow: 0 0 20px rgba(231,76,60,0.5); } }
+        @media (max-width: 750px) { .input-group { flex-direction: column; } .clock { font-size: 2.4rem; } .container { padding: 1.2rem; } }
+    </style>
+</head>
+<body>
+    <div id="audioOverlay" class="audio-overlay">
+        <div class="overlay-box">
+            <h3>🔊 Aktifkan Suara Bel</h3>
+            <p>Browser memblokir suara otomatis. Klik tombol di bawah untuk mengizinkan bel berbunyi.</p>
+            <button id="enableAudio">✅ Izinkan & Mulai</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>🔔 Aplikasi Bel Sekolah (Repeat Custom)</h1>
+        <div id="audioStatus" class="status-bar">⏳ Menunggu interaksi audio...</div>
+        <div id="clock" class="clock">00:00:00</div>
+        
+        <div class="controls">
+            <button id="testBell" class="btn-secondary" disabled>🔊 Test Suara</button>
+            <button id="clearAll" class="btn-secondary">🗑️ Hapus Semua</button>
+        </div>
+
+        <div class="input-group" id="formContainer">
+            <input type="time" id="bellTime" required>
+            <input type="text" id="bellLabel" placeholder="Keterangan" required>
+            <select id="bellSoundType">
+                <option value="bell_klasik">🔔 Klasik</option>
+                <option value="pelajaran">📖 Pelajaran (Ding)</option>
+                <option value="istirahat">☕ Istirahat (Chime)</option>
+                <option value="pulang">🏠 Pulang (Gong)</option>
+                <option value="alarm">🚨 Darurat</option>
+            </select>
+            <input type="number" id="bellDuration" placeholder="Detik" min="0.5" max="10" step="0.5" value="3.5" title="Durasi per bunyi (0.5 - 10 detik)">
+            <input type="number" id="bellRepeat" min="1" max="10" step="1" value="1" title="Jumlah pengulangan (1 - 10)">
+            <button id="addBell">➕ Tambah</button>
+            <button id="cancelEdit" class="btn-secondary" style="display:none;">❌ Batal</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 90px;">Waktu</th>
+                    <th>Keterangan</th>
+                    <th style="width: 100px;">Suara</th>
+                    <th style="width: 80px;">Durasi</th>
+                    <th style="width: 80px;">Ulang</th>
+                    <th style="width: 140px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="scheduleList"></tbody>
+        </table>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        // 1. KONFIGURASI SUARA & JEDA OTOMATIS
+        const PAUSE_BETWEEN_REPEATS = 1.0; // Detik jeda antar bunyi
+        const SOUND_DEFAULTS = {
+            bell_klasik: { dur: 3.5, oscs: [{f:520, g:1.0}, {f:1040, g:0.5}, {f:1560, g:0.35}, {f:2080, g:0.2}] },
+            pelajaran: { dur: 0.4, oscs: [{f:880, g:0.4, start:0}, {f:880, g:0.4, start:0.4}] },
+            istirahat: { dur: 1.8, oscs: [{f:659, g:0.3, start:0}, {f:784, g:0.3, start:0.25}, {f:880, g:0.3, start:0.5}] },
+            pulang: { dur: 5.0, oscs: [{f:220, g:0.5}, {f:330, g:0.25}, {f:440, g:0.1}] },
+            alarm: { dur: 1.6, isPulse: true }
+        };
+        const SOUND_LABELS = {
+            bell_klasik: '🔔 Klasik', pelajaran: '📖 Ding',
+            istirahat: '☕ Chime', pulang: '🏠 Gong', alarm: '🚨 Alarm'
+        };
+
+        // 2. STATE & INISIALISASI DATA
+        let schedule = JSON.parse(localStorage.getItem('schoolBellSchedule')) || [];
+        schedule = schedule.map(s => ({
+            time: s.time, 
+            label: s.label, 
+            sound: s.sound || 'bell_klasik',
+            duration: s.duration || SOUND_DEFAULTS[s.sound]?.dur || 2.0,
+            repeat: s.repeat || 1
+        }));
+        
+        let lastRingedTime = '';
+        let audioCtx = null;
+        let audioEnabled = false;
+        let editTime = null;
+
+        if (schedule.length === 0) {
+            schedule = [
+                { time: '07:00', label: 'Masuk Kelas', sound: 'bell_klasik', duration: 3.5, repeat: 1 },
+                { time: '09:30', label: 'Istirahat 1', sound: 'istirahat', duration: 1.8, repeat: 2 },
+                { time: '10:00', label: 'Masuk Kembali', sound: 'pelajaran', duration: 0.4, repeat: 1 },
+                { time: '12:00', label: 'Istirahat 2 / Pulang', sound: 'pulang', duration: 5.0, repeat: 1 }
+            ];
+            saveSchedule();
+        }
+        renderSchedule();
+
+        // 3. AUDIO ENGINE
+        function playSoundType(type, duration) {
+            if (!audioEnabled || !audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const dur = Math.max(0.5, Math.min(10, duration || 2.0));
+            const config = SOUND_DEFAULTS[type] || SOUND_DEFAULTS.bell_klasik;
+
+            const createOsc = (freq, wave, gainVal, startOffset, durMult = 1) => {
+                const actualDur = Math.max(0.05, dur * durMult);
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = wave; osc.frequency.value = freq;
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0, now + startOffset);
+                gain.gain.linearRampToValueAtTime(gainVal, now + startOffset + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + startOffset + actualDur);
+                osc.start(now + startOffset); osc.stop(now + startOffset + actualDur + 0.1);
+            };
+
+            if (config.isPulse) {
+                const count = Math.max(2, Math.round(dur / 0.25));
+                const gap = dur / count;
+                for(let i=0; i<count; i++) createOsc(800, 'square', 0.15, i * gap, gap / dur);
+            } else {
+                config.oscs.forEach(o => createOsc(o.f, 'sine', o.g, o.start || 0, o.durMult || 1));
+            }
+        }
+
+        // 4. TRIGGER DENGAN PENGULANGAN
+        function triggerBell(label, time, soundType, duration, repeat) {
+            repeat = Math.max(1, Math.min(10, repeat));
+            const totalSeconds = repeat * duration + (repeat > 1 ? (repeat - 1) * PAUSE_BETWEEN_REPEATS : 0);
+            
+            $('#clock').addClass('ringing');
+            setTimeout(() => $('#clock').removeClass('ringing'), totalSeconds * 1000 + 500);
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('🔔 Bel Sekolah', { body: `${label} (${time}) | ${repeat}x ${duration}s` });
+            }
+
+            let current = 0;
+            function ringNext() {
+                if (current >= repeat) return;
+                playSoundType(soundType, duration);
+                current++;
+                if (current < repeat) {
+                    setTimeout(ringNext, (duration + PAUSE_BETWEEN_REPEATS) * 1000);
+                }
+            }
+            ringNext();
+        }
+
+        // 5. JAM & CHECK
+        setInterval(function() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            $('#clock').text(`${h}:${m}:${String(now.getSeconds()).padStart(2, '0')}`);
+            
+            const currentHM = `${h}:${m}`;
+            if (currentHM !== lastRingedTime) {
+                const match = schedule.find(s => s.time === currentHM);
+                if (match) {
+                    triggerBell(match.label, currentHM, match.sound, match.duration, match.repeat);
+                    lastRingedTime = currentHM;
+                }
+            }
+        }, 1000);
+
+        // 6. MANAJEMEN JADWAL
+        function resetForm() {
+            $('#bellTime, #bellLabel').val('');
+            $('#bellSoundType').val('bell_klasik');
+            $('#bellDuration').val(3.5);
+            $('#bellRepeat').val(1);
+            editTime = null;
+            $('#addBell').text('➕ Tambah').css('background', '');
+            $('#cancelEdit').hide();
+            $('#formContainer').removeClass('editing');
+        }
+
+        $('#addBell').click(function() {
+            const time = $('#bellTime').val();
+            const label = $('#bellLabel').val().trim();
+            const sound = $('#bellSoundType').val();
+            let duration = parseFloat($('#bellDuration').val()) || 2.0;
+            let repeat = parseInt($('#bellRepeat').val()) || 1;
+            duration = Math.max(0.5, Math.min(10, duration));
+            repeat = Math.max(1, Math.min(10, repeat));
+
+            if (!time || !label) return alert('Waktu dan keterangan wajib diisi!');
+            if (schedule.some(s => s.time === time && s.time !== editTime)) {
+                return alert('Jadwal waktu ini sudah ada!');
+            }
+
+            if (editTime) {
+                const idx = schedule.findIndex(s => s.time === editTime);
+                if (idx !== -1) schedule[idx] = { time, label, sound, duration, repeat };
+            } else {
+                schedule.push({ time, label, sound, duration, repeat });
+            }
+            schedule.sort((a, b) => a.time.localeCompare(b.time));
+            saveSchedule(); renderSchedule(); resetForm();
+        });
+
+        $(document).on('click', '.edit-btn', function() {
+            const t = $(this).data('time');
+            const item = schedule.find(s => s.time === t);
+            if (!item) return;
+            
+            $('#bellTime').val(item.time);
+            $('#bellLabel').val(item.label);
+            $('#bellSoundType').val(item.sound);
+            $('#bellDuration').val(item.duration);
+            $('#bellRepeat').val(item.repeat);
+            editTime = item.time;
+            
+            $('#addBell').text('💾 Update').css('background', 'var(--success)');
+            $('#cancelEdit').show();
+            $('#formContainer').addClass('editing');
+            $('#bellTime').focus();
+        });
+
+        $(document).on('click', '.delete-btn', function() {
+            const t = $(this).data('time');
+            if (confirm('Hapus jadwal ini?')) {
+                schedule = schedule.filter(s => s.time !== t);
+                if (editTime === t) resetForm();
+                saveSchedule(); renderSchedule();
+            }
+        });
+
+        $('#cancelEdit').click(resetForm);
+        $('#clearAll').click(function() {
+            if (confirm('Yakin hapus semua jadwal?')) { schedule = []; saveSchedule(); renderSchedule(); resetForm(); }
+        });
+
+        $('#testBell').click(function() {
+            const dur = parseFloat($('#bellDuration').val()) || 2.0;
+            const rep = parseInt($('#bellRepeat').val()) || 1;
+            triggerBell('Test Suara', '00:00', $('#bellSoundType').val(), dur, rep);
+        });
+
+        $('#enableAudio').click(function() {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                audioEnabled = true;
+                $('#audioOverlay').addClass('hidden');
+                $('#audioStatus').html('✅ <span style="color:var(--success)">Audio aktif. Bel akan berbunyi otomatis dengan pengulangan.</span>');
+                $('#testBell').prop('disabled', false);
+            } catch(e) { alert('Browser tidak mendukung Web Audio API.'); }
+        });
+
+        // 7. RENDER & UTILS
+        function renderSchedule() {
+            const tbody = $('#scheduleList');
+            tbody.empty();
+            if (schedule.length === 0) {
+                tbody.append('<tr><td colspan="6" class="empty-state">Belum ada jadwal. Tambahkan di atas.</td></tr>');
+                return;
+            }
+            schedule.forEach(item => {
+                tbody.append(`
+                    <tr>
+                        <td><strong>${item.time}</strong></td>
+                        <td>${item.label}</td>
+                        <td><span class="sound-badge">${SOUND_LABELS[item.sound] || item.sound}</span></td>
+                        <td><span class="dur-badge">${item.duration}s</span></td>
+                        <td><span class="repeat-badge">${item.repeat}x</span></td>
+                        <td>
+                            <button class="btn-edit edit-btn" data-time="${item.time}">✏️ Edit</button>
+                            <button class="btn-danger delete-btn" data-time="${item.time}">🗑️</button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+        function saveSchedule() { localStorage.setItem('schoolBellSchedule', JSON.stringify(schedule)); }
+        if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+    });
+    </script>
+</body>
+</html>
